@@ -1,0 +1,1296 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KidsChess - شطرنج الأطفال التعليمي</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr;
+            gap: 20px;
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            grid-column: 1 / -1;
+            text-align: center;
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .sidebar {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 15px;
+            border: 3px solid #e2e8f0;
+        }
+
+        .sidebar h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .mode-selector {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .mode-btn {
+            padding: 15px;
+            border: 3px solid #667eea;
+            background: white;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1.1em;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .mode-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .mode-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .piece-guide {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .piece-guide h3 {
+            color: #764ba2;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        .piece-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            margin: 5px 0;
+            background: #f1f5f9;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .piece-item:hover {
+            background: #e0e7ff;
+            transform: translateX(-5px);
+        }
+
+        .piece-icon {
+            font-size: 2em;
+        }
+
+        .piece-info {
+            flex: 1;
+        }
+
+        .piece-name {
+            font-weight: bold;
+            color: #1e293b;
+        }
+
+        .piece-desc {
+            font-size: 0.9em;
+            color: #64748b;
+        }
+
+        .main-area {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .game-info {
+            text-align: center;
+            padding: 15px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 15px;
+            color: white;
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+
+        .board-container {
+            display: flex;
+            justify-content: center;
+            position: relative;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border: 5px solid #8b5cf6;
+            border-radius: 10px;
+            overflow: hidden;
+            max-width: 500px;
+            aspect-ratio: 1;
+            width: 100%;
+        }
+
+        .square {
+            aspect-ratio: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: clamp(2em, 5vw, 3em);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .square.light {
+            background: #f0d9b5;
+        }
+
+        .square.dark {
+            background: #b58863;
+        }
+
+        .square.selected {
+            background: #7dd3fc !important;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.3);
+            animation: selected-pulse 0.5s ease;
+        }
+
+        @keyframes selected-pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .square.valid-move {
+            background: #86efac !important;
+        }
+
+        .square.valid-move::after {
+            content: '●';
+            position: absolute;
+            font-size: 0.5em;
+            color: #16a34a;
+            animation: bounce 0.6s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        .square.highlighted {
+            box-shadow: inset 0 0 15px rgba(250, 204, 21, 0.8);
+            animation: glow 1s infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: inset 0 0 15px rgba(250, 204, 21, 0.8); }
+            50% { box-shadow: inset 0 0 25px rgba(250, 204, 21, 1); }
+        }
+
+        .square:hover {
+            transform: scale(1.05);
+            z-index: 10;
+        }
+
+        .instruction-panel {
+            background: #fef3c7;
+            padding: 20px;
+            border-radius: 15px;
+            border: 3px solid #fbbf24;
+            text-align: center;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .instruction-panel h3 {
+            color: #92400e;
+            margin-bottom: 10px;
+            font-size: 1.4em;
+        }
+
+        .instruction-panel p {
+            color: #78350f;
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 25px;
+            font-size: 1.1em;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .primary-btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .secondary-btn {
+            background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+        }
+
+        .success-btn {
+            background: linear-gradient(135deg, #86efac 0%, #22c55e 100%);
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+
+        .lesson-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .lesson-item {
+            padding: 15px;
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .lesson-item:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+            transform: translateX(-5px);
+        }
+
+        .lesson-item.completed {
+            border-color: #22c55e;
+            background: #f0fdf4;
+        }
+
+        .lesson-number {
+            background: #667eea;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .lesson-item.completed .lesson-number {
+            background: #22c55e;
+        }
+
+        .hint-box {
+            background: #dbeafe;
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #3b82f6;
+            margin-top: 10px;
+        }
+
+        .hint-box h4 {
+            color: #1e40af;
+            margin-bottom: 5px;
+        }
+
+        .hint-box p {
+            color: #1e3a8a;
+            font-size: 1em;
+        }
+
+        .score-display {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            padding: 15px;
+            border-radius: 10px;
+            color: white;
+            text-align: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 1024px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                order: 2;
+            }
+            
+            .main-area {
+                order: 1;
+            }
+        }
+
+        .celebration {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+            text-align: center;
+            z-index: 1000;
+            animation: celebrationPop 0.5s ease;
+        }
+
+        @keyframes celebrationPop {
+            0% { transform: translate(-50%, -50%) scale(0); }
+            100% { transform: translate(-50%, -50%) scale(1); }
+        }
+
+        .celebration h2 {
+            color: #22c55e;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>♟️ KidsChess - تعلم الشطرنج ♟️</h1>
+
+        <!-- الشريط الجانبي الأيمن -->
+        <div class="sidebar">
+            <h2>🎯 اختر وضع اللعب</h2>
+            <div class="mode-selector">
+                <div class="mode-btn active" onclick="setMode('learn')">
+                    📚 وضع التعلم
+                </div>
+                <div class="mode-btn" onclick="setMode('practice')">
+                    🎮 وضع التدريب
+                </div>
+                <div class="mode-btn" onclick="setMode('puzzle')">
+                    🧩 الألغاز
+                </div>
+                <div class="mode-btn" onclick="setMode('free')">
+                    🆓 لعب حر
+                </div>
+            </div>
+
+            <div id="lessons-panel" style="display: block;">
+                <h2>📖 الدروس</h2>
+                <div class="lesson-list">
+                    <div class="lesson-item" onclick="startLesson(1)">
+                        <div class="lesson-number">1</div>
+                        <div>تعرف على القطع</div>
+                    </div>
+                    <div class="lesson-item" onclick="startLesson(2)">
+                        <div class="lesson-number">2</div>
+                        <div>تحريك البيدق</div>
+                    </div>
+                    <div class="lesson-item" onclick="startLesson(3)">
+                        <div class="lesson-number">3</div>
+                        <div>تحريك الرخ</div>
+                    </div>
+                    <div class="lesson-item" onclick="startLesson(4)">
+                        <div class="lesson-number">4</div>
+                        <div>تحريك الحصان</div>
+                    </div>
+                    <div class="lesson-item" onclick="startLesson(5)">
+                        <div class="lesson-number">5</div>
+                        <div>تحريك الفيل</div>
+                    </div>
+                    <div class="lesson-item" onclick="startLesson(6)">
+                        <div class="lesson-number">6</div>
+                        <div>تحريك الملكة</div>
+                    </div>
+                    <div class="lesson-item" onclick="startLesson(7)">
+                        <div class="lesson-number">7</div>
+                        <div>تحريك الملك</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="score-display" id="score-display">
+                ⭐ النقاط: <span id="score">0</span>
+            </div>
+        </div>
+
+        <!-- المنطقة الرئيسية -->
+        <div class="main-area">
+            <div class="game-info" id="game-info">
+                مرحباً! اختر درساً لتبدأ التعلم 🎓
+            </div>
+
+            <div class="board-container">
+                <div class="board" id="board"></div>
+            </div>
+
+            <div class="instruction-panel" id="instruction-panel">
+                <h3>📚 تعليمات</h3>
+                <p>اختر أحد الدروس من القائمة لتبدأ رحلة تعلم الشطرنج!</p>
+            </div>
+
+            <div class="controls">
+                <button class="success-btn" id="hint-btn" onclick="showHint()" style="display: none;">
+                    💡 تلميح
+                </button>
+                <button class="secondary-btn" id="next-btn" onclick="nextStep()" style="display: none;">
+                    ⏭️ التالي
+                </button>
+                <button class="primary-btn" onclick="resetBoard()">
+                    🔄 إعادة ضبط
+                </button>
+            </div>
+        </div>
+
+        <!-- الشريط الجانبي الأيسر -->
+        <div class="sidebar">
+            <h2>📖 دليل القطع</h2>
+            <div class="piece-guide">
+                <div class="piece-item" onclick="showPieceInfo('pawn')">
+                    <div class="piece-icon">♙</div>
+                    <div class="piece-info">
+                        <div class="piece-name">البيدق</div>
+                        <div class="piece-desc">يتحرك للأمام فقط</div>
+                    </div>
+                </div>
+                <div class="piece-item" onclick="showPieceInfo('rook')">
+                    <div class="piece-icon">♖</div>
+                    <div class="piece-info">
+                        <div class="piece-name">الرخ (القلعة)</div>
+                        <div class="piece-desc">أفقي وعمودي</div>
+                    </div>
+                </div>
+                <div class="piece-item" onclick="showPieceInfo('knight')">
+                    <div class="piece-icon">♘</div>
+                    <div class="piece-info">
+                        <div class="piece-name">الحصان</div>
+                        <div class="piece-desc">حرف L</div>
+                    </div>
+                </div>
+                <div class="piece-item" onclick="showPieceInfo('bishop')">
+                    <div class="piece-icon">♗</div>
+                    <div class="piece-info">
+                        <div class="piece-name">الفيل</div>
+                        <div class="piece-desc">قطرياً فقط</div>
+                    </div>
+                </div>
+                <div class="piece-item" onclick="showPieceInfo('queen')">
+                    <div class="piece-icon">♕</div>
+                    <div class="piece-info">
+                        <div class="piece-name">الملكة (الوزير)</div>
+                        <div class="piece-desc">أقوى قطعة</div>
+                    </div>
+                </div>
+                <div class="piece-item" onclick="showPieceInfo('king')">
+                    <div class="piece-icon">♔</div>
+                    <div class="piece-info">
+                        <div class="piece-name">الملك</div>
+                        <div class="piece-desc">مربع واحد</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="hint-box" class="hint-box" style="display: none;">
+                <h4>💡 تلميح</h4>
+                <p id="hint-text"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const pieces = {
+            'K': '♔', 'Q': '♕', 'R': '♖', 'B': '♗', 'N': '♘', 'P': '♙',
+            'k': '♚', 'q': '♛', 'r': '♜', 'b': '♝', 'n': '♞', 'p': '♟'
+        };
+
+        const pieceNames = {
+            'P': 'البيدق الأبيض', 'p': 'البيدق الأسود',
+            'R': 'الرخ الأبيض', 'r': 'الرخ الأسود',
+            'N': 'الحصان الأبيض', 'n': 'الحصان الأسود',
+            'B': 'الفيل الأبيض', 'b': 'الفيل الأسود',
+            'Q': 'الملكة البيضاء', 'q': 'الملكة السوداء',
+            'K': 'الملك الأبيض', 'k': 'الملك الأسود'
+        };
+
+        let board = [];
+        let selectedSquare = null;
+        let currentMode = 'learn';
+        let currentLesson = null;
+        let lessonStep = 0;
+        let score = 0;
+        let expectedMove = null;
+
+        const lessons = {
+            1: {
+                title: 'تعرف على القطع',
+                steps: [
+                    {
+                        board: [
+                            ['', '', '', '', '', '', '', ''],
+                            ['', '', '', '', '', '', '', ''],
+                            ['', '', '', '', '', '', '', ''],
+                            ['P', 'R', 'N', 'B', 'Q', 'K', '', ''],
+                            ['', '', '', '', '', '', '', ''],
+                            ['', '', '', '', '', '', '', ''],
+                            ['', '', '', '', '', '', '', ''],
+                            ['', '', '', '', '', '', '', '']
+                        ],
+                        instruction: 'هذه هي القطع البيضاء في الشطرنج! من اليمين: البيدق، الرخ، الحصان، الفيل، الملكة، والملك',
+                        highlight: [[3,0], [3,1], [3,2], [3,3], [3,4], [3,5]]
+                    }
+                ]
+            },
+            2: {
+                title: 'تحريك البيدق',
+                steps: [
+                    {
+                        board: [
+                            ['', '', '', '', '', '', '', ''],
+                            ['', '', '', '', '', '', '', ''],
+                            ['', '', '', '', '', '', '', ''],
+                            ['', '', '', '', '', '', '', ''],
+                            ['', '', '', 'P', '', '', '', ''],
+                            ['', '', '', '', '', '', '', ''],
+                            ['', '', '', '', '', '', '', ''],
+                            ['', '', '', '', '', '', '', '']
+                        ],
+                        instruction: 'البيدق يتحرك للأمام مربع واحد. جرب تحريك البيدق للأمام!',
+                        highlight: [[4,3]],
+                        expectedFrom: [4,3],
+                        expectedTo: [3,3]
+                    },
+                    {
+                        board: [
+                            ['', '', '', '', '', '', '', ''],
+                            ['', '', '', '', '', '', '', ''],
+                            ['', '', '', '', '', '', '', ''],
+                            ['', '', '', '', '', '', '', ''],
+                            ['', '', '', '', '', '', '', ''],
+                            ['', '', '', '', '', '', '', ''],
+                            ['', '', '', 'P', '', '', '', ''],
+                            ['', '', '', '', '', '', '', '']
+                        ],
+                        instruction: 'في أول حركة، البيدق يمكنه التحرك مربعين! جرب تحريكه مربعين للأمام',
+                        highlight: [[6,3]],
+                        expectedFrom: [6,3],
+                        expectedTo: [4,3]
+                    }
+                ]
+            },
+            3: {
+                title: 'تحريك الرخ',
+                steps: [
+                    {
+                        board: [
+                            ['', '', '', '', '', '', '', ''],
+                            ['', '', '', '', '', '', '', ''],
+                            ['', '', '', '', '', '', '', ''],
+                            ['', '', '', 'R', '', '', '', ''],
+                            ['', '', '', '', '', '', '', ''],
+                            ['', '', '', '', '', '', '', ''],
+                            ['', '', '', '', '', '', '', ''],
+                            ['', '', '', '', '', '', '', '']
+                        ],
+                        instruction: 'الرخ يتحرك أفقياً أو عمودياً! جرب تحريكه يميناً',
+                        highlight: [[3,3]],
+                        expectedFrom: [3,3],
+                        expectedTo: [3,6]
+                    }
+                ]
+            },
+            4: {
+                title: 'تحريك الحصان',
+                steps: [
+                    {
+                        board: [
+                            ['', '', '', '', '', '', '', ''],
+                            ['', '', '', '', '', '', '', ''],
+                            ['', '', '', '', '', '', '', ''],
+                            ['', '', '', 'N', '', '', '', ''],
+                            ['', '', '', '', '', '', '', ''],
+                            ['', '', '', '', '', '', '', ''],
+                            ['', '', '', '', '', '', '', ''],
+                            ['', '', '', '', '', '', '', '']
+                        ],
+                        instruction: 'الحصان يتحرك على شكل حرف L! مربعين في اتجاه ومربع في الاتجاه العمودي. جرب!',
+                        highlight: [[3,3]],
+                        expectedFrom: [3,3],
+                        expectedTo: [1,4]
+                    }
+                ]
+            },
+            5: {
+                title: 'تحريك الفيل',
+                steps: [
+                    {
+                        board: [
+                            ['', '', '', '', '', '', '', ''],
+                            ['', '', '', '', '', '', '', ''],
+                            ['', '', '', '', '', '', '', ''],
+                            ['', '', '', 'B', '', '', '', ''],
+                            ['', '', '', '', '', '', '', ''],
+                            ['', '', '', '', '', '', '', ''],
+                            ['', '', '', '', '', '', '', ''],
+                            ['', '', '', '', '', '', '', '']
+                        ],
+                        instruction: 'الفيل يتحرك قطرياً فقط! جرب تحريكه بشكل قطري',
+                        highlight: [[3,3]],
+                        expectedFrom: [3,3],
+                        expectedTo: [0,6]
+                    }
+                ]
+            },
+            6: {
+                title: 'تحريك الملكة',
+                steps: [
+                    {
+                        board: [
+                            ['', '', '', '', '', '', '', ''],
+                            ['', '', '', '', '', '', '', ''],
+                            ['', '', '', '', '', '', '', ''],
+                            ['', '', '', 'Q', '', '', '', ''],
+                            ['', '', '', '', '', '', '', ''],
+                            ['', '', '', '', '', '', '', ''],
+                            ['', '', '', '', '', '', '', ''],
+                            ['', '', '', '', '', '', '', '']
+                        ],
+                        instruction: 'الملكة أقوى قطعة! تتحرك أفقياً، عمودياً، وقطرياً. جرب تحريكها!',
+                        highlight: [[3,3]],
+                        expectedFrom: [3,3],
+                        expectedTo: [3,7]
+                    }
+                ]
+            },
+            7: {
+                title: 'تحريك الملك',
+                steps: [
+                    {
+                        board: [
+                            ['', '', '', '', '', '', '', ''],
+                            ['', '', '', '', '', '', '', ''],
+                            ['', '', '', '', '', '', '', ''],
+                            ['', '', '', 'K', '', '', '', ''],
+                            ['', '', '', '', '', '', '', ''],
+                            ['', '', '', '', '', '', '', ''],
+                            ['', '', '', '', '', '', '', ''],
+                            ['', '', '', '', '', '', '', '']
+                        ],
+                        instruction: 'الملك يتحرك مربع واحد في أي اتجاه. جرب تحريكه!',
+                        highlight: [[3,3]],
+                        expectedFrom: [3,3],
+                        expectedTo: [2,3]
+                    }
+                ]
+            }
+        };
+
+        function initGame() {
+            board = Array(8).fill().map(() => Array(8).fill(''));
+            renderBoard();
+        }
+
+        function renderBoard() {
+            const boardElement = document.getElementById('board');
+            boardElement.innerHTML = '';
+
+            for (let row = 0; row < 8; row++) {
+                for (let col = 0; col < 8; col++) {
+                    const square = document.createElement('div');
+                    square.className = 'square';
+                    square.className += (row + col) % 2 === 0 ? ' light' : ' dark';
+                    square.dataset.row = row;
+                    square.dataset.col = col;
+                    
+                    const piece = board[row][col];
+                    if (piece) {
+                        square.textContent = pieces[piece];
+                    }
+
+                    square.addEventListener('click', () => handleSquareClick(row, col));
+                    boardElement.appendChild(square);
+                }
+            }
+
+            updateScore();
+        }
+
+        function handleSquareClick(row, col) {
+            const piece = board[row][col];
+
+            if (currentMode === 'learn' && currentLesson) {
+                handleLessonClick(row, col);
+                return;
+            }
+
+            if (selectedSquare) {
+                if (isValidMove(selectedSquare.row, selectedSquare.col, row, col)) {
+                    makeMove(selectedSquare.row, selectedSquare.col, row, col);
+                    selectedSquare = null;
+                    renderBoard();
+                    playSound('move');
+                } else {
+                    selectedSquare = null;
+                    renderBoard();
+                }
+            } else {
+                if (piece) {
+                    selectedSquare = {row, col};
+                    highlightValidMoves(row, col);
+                    showPieceMoveDescription(piece);
+                }
+            }
+        }
+
+        function handleLessonClick(row, col) {
+            const step = lessons[currentLesson].steps[lessonStep];
+            
+            if (!step.expectedFrom) {
+                return;
+            }
+
+            if (!selectedSquare) {
+                if (row === step.expectedFrom[0] && col === step.expectedFrom[1]) {
+                    selectedSquare = {row, col};
+                    highlightValidMoves(row, col);
+                    document.getElementById('instruction-panel').innerHTML = `
+                        <h3>✅ صحيح!</h3>
+                        <p>الآن حرّك القطعة إلى المكان الصحيح المُظلل باللون الأخضر</p>
+                    `;
+                } else {
+                    document.getElementById('instruction-panel').innerHTML = `
+                        <h3>❌ خطأ</h3>
+                        <p>اختر القطعة المُظللة بالأصفر أولاً!</p>
+                    `;
+                    playSound('error');
+                }
+            } else {
+                if (row === step.expectedTo[0] && col === step.expectedTo[1]) {
+                    makeMove(selectedSquare.row, selectedSquare.col, row, col);
+                    selectedSquare = null;
+                    score += 10;
+                    playSound('success');
+                    showCelebration('🎉 أحسنت! +10 نقاط');
+                    
+                    setTimeout(() => {
+                        lessonStep++;
+                        if (lessonStep < lessons[currentLesson].steps.length) {
+                            loadLessonStep();
+                        } else {
+                            completedLesson();
+                        }
+                    }, 2000);
+                } else {
+                    selectedSquare = null;
+                    renderBoard();
+                    loadLessonStep();
+                    document.getElementById('instruction-panel').innerHTML = `
+                        <h3>❌ حاول مرة أخرى</h3>
+                        <p>هذه ليست الحركة الصحيحة. جرب مرة أخرى!</p>
+                    `;
+                    playSound('error');
+                }
+            }
+        }
+
+        function isValidMove(fromRow, fromCol, toRow, toCol) {
+            if (fromRow === toRow && fromCol === toCol) return false;
+            const piece = board[fromRow][fromCol];
+            if (!piece) return false;
+
+            const rowDiff = toRow - fromRow;
+            const colDiff = toCol - fromCol;
+            const pieceType = piece.toLowerCase();
+
+            switch(pieceType) {
+                case 'p':
+                    const direction = piece === piece.toUpperCase() ? -1 : 1;
+                    return (colDiff === 0 && rowDiff === direction && !board[toRow][toCol]);
+                case 'r':
+                    return (rowDiff === 0 || colDiff === 0) && isPathClear(fromRow, fromCol, toRow, toCol);
+                case 'n':
+                    return (Math.abs(rowDiff) === 2 && Math.abs(colDiff) === 1) || 
+                           (Math.abs(rowDiff) === 1 && Math.abs(colDiff) === 2);
+                case 'b':
+                    return Math.abs(rowDiff) === Math.abs(colDiff) && isPathClear(fromRow, fromCol, toRow, toCol);
+                case 'q':
+                    return (rowDiff === 0 || colDiff === 0 || Math.abs(rowDiff) === Math.abs(colDiff)) && 
+                           isPathClear(fromRow, fromCol, toRow, toCol);
+                case 'k':
+                    return Math.abs(rowDiff) <= 1 && Math.abs(colDiff) <= 1;
+                default:
+                    return false;
+            }
+        }
+
+        function isPathClear(fromRow, fromCol, toRow, toCol) {
+            const rowStep = toRow > fromRow ? 1 : (toRow < fromRow ? -1 : 0);
+            const colStep = toCol > fromCol ? 1 : (toCol < fromCol ? -1 : 0);
+            let currentRow = fromRow + rowStep;
+            let currentCol = fromCol + colStep;
+
+            while (currentRow !== toRow || currentCol !== toCol) {
+                if (board[currentRow][currentCol]) return false;
+                currentRow += rowStep;
+                currentCol += colStep;
+            }
+            return true;
+        }
+
+        function highlightValidMoves(row, col) {
+            renderBoard();
+            const squares = document.querySelectorAll('.square');
+            squares[row * 8 + col].classList.add('selected');
+
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    if (isValidMove(row, col, r, c)) {
+                        squares[r * 8 + c].classList.add('valid-move');
+                    }
+                }
+            }
+        }
+
+        function makeMove(fromRow, fromCol, toRow, toCol) {
+            board[toRow][toCol] = board[fromRow][fromCol];
+            board[fromRow][fromCol] = '';
+        }
+
+        function showPieceMoveDescription(piece) {
+            const descriptions = {
+                'P': 'البيدق الأبيض: يتحرك مربع واحد للأمام، ومربعين في أول حركة',
+                'R': 'الرخ الأبيض: يتحرك أفقياً أو عمودياً أي عدد من المربعات',
+                'N': 'الحصان الأبيض: يتحرك على شكل حرف L (مربعين في اتجاه ومربع عمودي)',
+                'B': 'الفيل الأبيض: يتحرك قطرياً أي عدد من المربعات',
+                'Q': 'الملكة البيضاء: أقوى قطعة! تتحرك أفقياً وعمودياً وقطرياً',
+                'K': 'الملك الأبيض: يتحرك مربع واحد في أي اتجاه'
+            };
+
+            if (descriptions[piece]) {
+                document.getElementById('game-info').textContent = descriptions[piece];
+            }
+        }
+
+        function startLesson(lessonNum) {
+            currentLesson = lessonNum;
+            lessonStep = 0;
+            currentMode = 'learn';
+            
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.mode-btn')[0].classList.add('active');
+            
+            loadLessonStep();
+        }
+
+        function loadLessonStep() {
+            const lesson = lessons[currentLesson];
+            const step = lesson.steps[lessonStep];
+            
+            board = step.board.map(row => [...row]);
+            renderBoard();
+            
+            document.getElementById('game-info').textContent = `${lesson.title} - الخطوة ${lessonStep + 1}`;
+            document.getElementById('instruction-panel').innerHTML = `
+                <h3>📚 التعليمات</h3>
+                <p>${step.instruction}</p>
+            `;
+
+            if (step.highlight) {
+                setTimeout(() => {
+                    const squares = document.querySelectorAll('.square');
+                    step.highlight.forEach(([r, c]) => {
+                        squares[r * 8 + c].classList.add('highlighted');
+                    });
+                }, 100);
+            }
+        }
+
+        function completedLesson() {
+            document.getElementById('instruction-panel').innerHTML = `
+                <h3>🎊 تهانينا!</h3>
+                <p>لقد أكملت الدرس بنجاح! اختر درساً آخر لتتعلم المزيد</p>
+            `;
+            
+            const lessonItems = document.querySelectorAll('.lesson-item');
+            lessonItems[currentLesson - 1].classList.add('completed');
+            
+            playSound('complete');
+        }
+
+        function setMode(mode) {
+            currentMode = mode;
+            const btns = document.querySelectorAll('.mode-btn');
+            btns.forEach(btn => btn.classList.remove('active'));
+            
+            if (mode === 'learn') {
+                btns[0].classList.add('active');
+                document.getElementById('game-info').textContent = 'اختر درساً لتبدأ التعلم 🎓';
+            } else if (mode === 'practice') {
+                btns[1].classList.add('active');
+                initPracticeMode();
+            } else if (mode === 'puzzle') {
+                btns[2].classList.add('active');
+                initPuzzleMode();
+            } else {
+                btns[3].classList.add('active');
+                initFreeMode();
+            }
+        }
+
+        function initPracticeMode() {
+            // وضع التدريب - قطعة عشوائية للتدرب عليها
+            const pieces = ['P', 'R', 'N', 'B', 'Q', 'K'];
+            const randomPiece = pieces[Math.floor(Math.random() * pieces.length)];
+            
+            board = Array(8).fill().map(() => Array(8).fill(''));
+            board[4][4] = randomPiece;
+            renderBoard();
+            
+            document.getElementById('game-info').textContent = `تدرب على تحريك ${pieceNames[randomPiece]}`;
+            document.getElementById('instruction-panel').innerHTML = `
+                <h3>🎮 وضع التدريب</h3>
+                <p>حرك القطعة في المنتصف وشاهد جميع الحركات الممكنة!</p>
+            `;
+        }
+
+        function initPuzzleMode() {
+            document.getElementById('game-info').textContent = '🧩 الألغاز قريباً!';
+            document.getElementById('instruction-panel').innerHTML = `
+                <h3>🧩 قريباً</h3>
+                <p>سنضيف ألغاز شطرنج ممتعة قريباً!</p>
+            `;
+        }
+
+        function initFreeMode() {
+            board = [
+                ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'],
+                ['p', 'p', 'p', 'p', 'p', 'p', 'p', 'p'],
+                ['', '', '', '', '', '', '', ''],
+                ['', '', '', '', '', '', '', ''],
+                ['', '', '', '', '', '', '', ''],
+                ['', '', '', '', '', '', '', ''],
+                ['P', 'P', 'P', 'P', 'P', 'P', 'P', 'P'],
+                ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']
+            ];
+            renderBoard();
+            document.getElementById('game-info').textContent = '🆓 العب بحرية!';
+            document.getElementById('instruction-panel').innerHTML = `
+                <h3>🆓 لعب حر</h3>
+                <p>العب بحرية وجرب تحريك جميع القطع!</p>
+            `;
+        }
+
+        function resetBoard() {
+            if (currentLesson) {
+                loadLessonStep();
+            } else if (currentMode === 'free') {
+                initFreeMode();
+            } else if (currentMode === 'practice') {
+                initPracticeMode();
+            } else {
+                initGame();
+            }
+        }
+
+        function showPieceInfo(type) {
+            const info = {
+                'pawn': 'البيدق: يتحرك للأمام مربع واحد (أو مربعين في أول حركة). يأكل قطرياً.',
+                'rook': 'الرخ: يتحرك أفقياً أو عمودياً أي عدد من المربعات.',
+                'knight': 'الحصان: يتحرك على شكل حرف L. مربعين في اتجاه ومربع عمودياً. يقفز فوق القطع.',
+                'bishop': 'الفيل: يتحرك قطرياً أي عدد من المربعات.',
+                'queen': 'الملكة: أقوى قطعة! تتحرك أفقياً وعمودياً وقطرياً أي عدد من المربعات.',
+                'king': 'الملك: يتحرك مربع واحد فقط في أي اتجاه. أهم قطعة في اللعبة!'
+            };
+
+            document.getElementById('hint-box').style.display = 'block';
+            document.getElementById('hint-text').textContent = info[type];
+        }
+
+        function showHint() {
+            const hints = [
+                'حاول حماية قطعك المهمة!',
+                'الملكة أقوى قطعة - استخدمها بحكمة',
+                'لا تنسى تحريك البيادق للأمام',
+                'الحصان يمكنه القفز فوق القطع الأخرى'
+            ];
+            const randomHint = hints[Math.floor(Math.random() * hints.length)];
+            
+            document.getElementById('hint-box').style.display = 'block';
+            document.getElementById('hint-text').textContent = randomHint;
+        }
+
+        function showCelebration(message) {
+            const overlay = document.createElement('div');
+            overlay.className = 'overlay';
+            overlay.onclick = () => {
+                document.body.removeChild(overlay);
+                document.body.removeChild(celebration);
+            };
+            
+            const celebration = document.createElement('div');
+            celebration.className = 'celebration';
+            celebration.innerHTML = `
+                <h2>${message}</h2>
+                <button class="success-btn" onclick="this.parentElement.parentElement.remove(); this.parentElement.remove();">
+                    ✨ متابعة
+                </button>
+            `;
+            
+            document.body.appendChild(overlay);
+            document.body.appendChild(celebration);
+        }
+
+        function updateScore() {
+            document.getElementById('score').textContent = score;
+        }
+
+        function playSound(type) {
+            // يمكن إضافة أصوات حقيقية لاحقاً
+            console.log(`Sound: ${type}`);
+        }
+
+        // تهيئة اللعبة
+        initGame();
+    </script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon='{"rayId":"9a4021236e7f5945","serverTiming":{"name":{"cfL4":true}},"version":"2025.9.1","token":"4edd5f8ec12a48cfa682ab8261b80a79"}' crossorigin="anonymous"></script>
+
+<!-- BEGIN: BILINGUAL TTS CONTROLS (injected) -->
+<style>
+#bilingualControls{
+  position: fixed;
+  left: 12px;
+  top: 12px;
+  z-index: 9999;
+  display:flex;
+  gap:8px;
+  align-items:center;
+  background: rgba(255,255,255,0.85);
+  padding:8px 10px;
+  border-radius:10px;
+  box-shadow:0 6px 18px rgba(0,0,0,0.25);
+  font-family: Arial, sans-serif;
+  direction: ltr;
+}
+#bilingualControls button{padding:6px 10px;border-radius:6px;border:1px solid #888;background:#fff;cursor:pointer}
+#bilingualControls button.active{background:#667eea;color:#fff;border-color:#667eea}
+#bilingualNotice{font-size:12px;color:#333;margin-left:6px}
+.lang-indicator{font-weight:600}
+</style>
+
+<div id="bilingualControls" aria-hidden="false">
+  <div>
+    <button id="btnArabic">عربي (مصري)</button>
+    <button id="btnEnglish">English (US)</button>
+  </div>
+  <div>
+    <button id="btnSpeakSelected" title="Speak selected text or clicked element">🔊 Speak</button>
+    <button id="btnAutoNarrate" title="Narrate a short tutorial">▶️ Tutorial</button>
+  </div>
+  <div id="bilingualNotice">Language: <span id="currentLang" class="lang-indicator">AR</span></div>
+</div>
+
+<script>
+(function(){
+  // Basic bilingual TTS helper injected into the existing page.
+  const btnAr = document.getElementById('btnArabic');
+  const btnEn = document.getElementById('btnEnglish');
+  const btnSpeak = document.getElementById('btnSpeakSelected');
+  const btnAuto = document.getElementById('btnAutoNarrate');
+  const cur = document.getElementById('currentLang');
+  let lang = 'ar'; // 'ar' or 'en'
+  const synth = window.speechSynthesis;
+
+  function setActive(){
+    if(lang==='ar'){
+      btnAr.classList.add('active');
+      btnEn.classList.remove('active');
+      cur.innerText = 'AR';
+    } else {
+      btnEn.classList.add('active');
+      btnAr.classList.remove('active');
+      cur.innerText = 'EN';
+    }
+  }
+
+  btnAr.addEventListener('click', ()=>{ lang='ar'; setActive(); });
+  btnEn.addEventListener('click', ()=>{ lang='en'; setActive(); });
+  setActive();
+
+  // function to speak given text with appropriate lang/voice
+  function speak(text){
+    if(!text) return;
+    if(synth.speaking) synth.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    // prefer specific voice locales but allow browser to choose fallback
+    utter.lang = lang==='ar' ? 'ar-EG' : 'en-US';
+    // voice selection: try to pick matching voice for locale
+    const voices = synth.getVoices();
+    if(voices && voices.length){
+      const prefer = voices.find(v=> v.lang.toLowerCase().includes(utter.lang.toLowerCase()));
+      if(prefer) utter.voice = prefer;
+    }
+    // friendly rate for children
+    utter.rate = 0.95;
+    utter.pitch = lang==='ar' ? 1.0 : 1.05;
+    synth.speak(utter);
+  }
+
+  // Speak selected text or last clicked element's text
+  btnSpeak.addEventListener('click', ()=>{
+    const sel = window.getSelection().toString().trim();
+    if(sel){ speak(sel); return; }
+    // fallback: if user previously clicked an element, we remember it
+    if(window.__lastClickedText){ speak(window.__lastClickedText); return; }
+    speak(lang==='ar' ? 'اختر نصًا أو اضغط على عنصر لتسمعه' : 'Select text or click an element to hear it');
+  });
+
+  // Add click-to-speak: clicking any visible element will speak its innerText (short)
+  document.addEventListener('click', (e)=>{
+    // ignore clicks on our controls
+    if(e.target.closest && e.target.closest('#bilingualControls')) return;
+    let el = e.target;
+    // prefer elements with data-narration attribute (if provided by the game)
+    let text = el.dataset && el.dataset.narration ? el.dataset.narration
+             : (el.innerText || el.textContent || '').trim();
+    if(!text) return;
+    // shorten long texts for clickable narration
+    text = text.split('\\n').map(s=>s.trim()).filter(Boolean).slice(0,3).join('. ');
+    // store for speak button fallback
+    window.__lastClickedText = text;
+    // speak in both languages if tutorial mode is on? For normal click, speak in current language
+    speak(text);
+  }, true);
+
+  // Tutorial script: educational bilingual phrases for common chess concepts.
+  const tutorialSteps = [
+    {ar: 'هذه لعبة تعليمية للشطرنج للأطفال. سنبدأ بمبادئ القطع.', en: 'This is a children\'s educational chess game. We will start with piece basics.'},
+    {ar: 'البيدق يتحرك خطوة واحدة إلى الأمام. في أول حركة يمكنه التحرك خطوتين.', en: 'The pawn moves one square forward. On its first move it can move two squares.'},
+    {ar: 'القلعة تتحرك في خطوط مستقيمة إلى الأمام أو الخلف أو الجانبين.', en: 'The rook moves in straight lines forward, backward, and sideways.'},
+    {ar: 'الفيل يتحرك قطريا عبر اللوحة.', en: 'The bishop moves diagonally across the board.'},
+    {ar: 'الملكة أقوى قطعة، تتحرك في أي اتجاه.', en: 'The queen is the most powerful piece, she moves in any direction.'},
+    {ar: 'الملك يجب حمايته. إذا تعرّض الملك للخطر تدعى هذه الحالة "كش".', en: 'Protect the king. If the king is under attack, that is called "check".'},
+    {ar: 'حاول أن تلعب بهدوء وتفكر قبل كل نقلة. حظًا سعيدًا!', en: 'Try to play calmly and think before each move. Good luck!'}
+  ];
+
+  btnAuto.addEventListener('click', async ()=>{
+    // Narrate the tutorial in the selected order: AR then EN for each step (educational bilingual)
+    for(const step of tutorialSteps){
+      // speak in Arabic first to match the user's request (Egyptian)
+      const arText = step.ar;
+      const enText = step.en;
+      // speak arabic
+      lang = 'ar'; setActive();
+      await speakPromise(arText);
+      // short pause
+      await delay(600);
+      // speak english (american)
+      lang = 'en'; setActive();
+      await speakPromise(enText);
+      await delay(700);
+    }
+    // return language to user-selected (leave as English if user set it)
+  });
+
+  function delay(ms){ return new Promise(res=>setTimeout(res, ms)); }
+  function speakPromise(text){
+    return new Promise((resolve)=>{
+      if(synth.speaking) synth.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = (text && /[\u0600-\u06FF]/.test(text)) ? 'ar-EG' : 'en-US';
+      const voices = synth.getVoices();
+      const prefer = voices.find(v=> v.lang.toLowerCase().includes(u.lang.toLowerCase()));
+      if(prefer) u.voice = prefer;
+      u.rate = 0.95;
+      u.onend = ()=> resolve();
+      u.onerror = ()=> resolve();
+      synth.speak(u);
+      // fallback resolve in case onend doesn't fire
+      setTimeout(()=>resolve(), 7000);
+    });
+  }
+
+  // ensure voices are loaded in some browsers
+  if (speechSynthesis && speechSynthesis.onvoiceschanged !== undefined) {
+    speechSynthesis.onvoiceschanged = function(){ /* noop to load voices */ };
+  }
+
+  // optional: show a small hint to users about click-to-speak for accessibility
+  try{
+    const hint = document.createElement('div');
+    hint.style.position='fixed';
+    hint.style.right='12px';
+    hint.style.bottom='12px';
+    hint.style.background='rgba(0,0,0,0.6)';
+    hint.style.color='#fff';
+    hint.style.padding='8px 10px';
+    hint.style.borderRadius='8px';
+    hint.style.zIndex='9999';
+    hint.style.fontSize='13px';
+    hint.innerText = 'اضغط على أي نص لسماعه — Click any text to hear it';
+    document.body.appendChild(hint);
+    setTimeout(()=>hint.remove(), 12000);
+  }catch(e){}
+})();
+</script>
+<!-- END: BILINGUAL TTS CONTROLS (injected) -->
+</body>
+</html>
